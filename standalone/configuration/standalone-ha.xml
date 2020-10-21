@@ -332,33 +332,68 @@
             </sasl>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:infinispan:10.0">
-            <cache-container name="keycloak" module="org.keycloak.keycloak-model-infinispan">
-                <transport lock-timeout="60000"/>
-                <local-cache name="realms">
-                    <object-memory size="10000"/>
-                </local-cache>
-                <local-cache name="users">
-                    <object-memory size="10000"/>
-                </local-cache>
-                <local-cache name="authorization">
-                    <object-memory size="10000"/>
-                </local-cache>
-                <local-cache name="keys">
-                    <object-memory size="1000"/>
-                    <expiration max-idle="3600000"/>
-                </local-cache>
-                <replicated-cache name="work"/>
-                <distributed-cache name="sessions" owners="1"/>
-                <distributed-cache name="authenticationSessions" owners="1"/>
-                <distributed-cache name="offlineSessions" owners="1"/>
-                <distributed-cache name="clientSessions" owners="1"/>
-                <distributed-cache name="offlineClientSessions" owners="1"/>
-                <distributed-cache name="loginFailures" owners="1"/>
-                <distributed-cache name="actionTokens" owners="2">
-                    <object-memory size="-1"/>
-                    <expiration interval="300000" max-idle="-1"/>
-                </distributed-cache>
-            </cache-container>
+          <cache-container name="keycloak" module="org.keycloak.keycloak-model-infinispan">
+              <transport lock-timeout="60000"/>
+              <local-cache name="realms">
+                  <object-memory size="10000"/>
+              </local-cache>
+              <local-cache name="users">
+                  <object-memory size="10000"/>
+              </local-cache>
+              <local-cache name="authorization">
+                  <object-memory size="10000"/>
+              </local-cache>
+              <local-cache name="keys">
+                  <object-memory size="1000"/>
+                  <expiration max-idle="3600000"/>
+              </local-cache>
+              <replicated-cache name="work"/>
+              <replicated-cache name="sessions">
+                  <remote-store cache="sessions" remote-servers="remote-cache" fetch-state="false" passivation="false" preload="false" purge="false" shared="true">
+                      <property name="rawValues">true</property>
+                      <property name="marshaller">org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory</property>
+                      <property name="protocolVersion">2.9</property>
+                  </remote-store>
+              </replicated-cache>
+              <replicated-cache name="authenticationSessions"/>
+              <replicated-cache name="offlineSessions">
+                  <remote-store cache="offlineSessions" remote-servers="remote-cache" fetch-state="false" passivation="false" preload="false" purge="false" shared="true">
+                      <property name="rawValues">true</property>
+                      <property name="marshaller">org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory</property>
+                      <property name="protocolVersion">2.9</property>
+                  </remote-store>
+              </replicated-cache>
+              <replicated-cache name="clientSessions">
+                  <remote-store cache="clientSessions" remote-servers="remote-cache" fetch-state="false" passivation="false" preload="false" purge="false" shared="true">
+                      <property name="rawValues">true</property>
+                      <property name="marshaller">org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory</property>
+                      <property name="protocolVersion">2.9</property>
+                  </remote-store>
+              </replicated-cache>
+              <replicated-cache name="offlineClientSessions">
+                  <remote-store cache="offlineClientSessions" remote-servers="remote-cache" fetch-state="false" passivation="false" preload="false" purge="false" shared="true">
+                      <property name="rawValues">true</property>
+                      <property name="marshaller">org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory</property>
+                      <property name="protocolVersion">2.9</property>
+                  </remote-store>
+              </replicated-cache>
+              <replicated-cache name="loginFailures">
+                  <remote-store cache="loginFailures" remote-servers="remote-cache" fetch-state="false" passivation="false" preload="false" purge="false" shared="true">
+                      <property name="rawValues">true</property>
+                      <property name="marshaller">org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory</property>
+                      <property name="protocolVersion">2.9</property>
+                  </remote-store>
+              </replicated-cache>
+              <replicated-cache name="actionTokens">
+                  <object-memory size="-1"/>
+                  <expiration interval="300000" max-idle="-1"/>
+                  <remote-store cache="actionTokens" remote-servers="remote-cache" fetch-state="false" passivation="false" preload="true" purge="false" shared="true">
+                      <property name="rawValues">true</property>
+                      <property name="marshaller">org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory</property>
+                      <property name="protocolVersion">2.9</property>
+                  </remote-store>
+              </replicated-cache>
+          </cache-container>
             <cache-container name="server" aliases="singleton cluster" default-cache="default" module="org.wildfly.clustering.server">
                 <transport lock-timeout="60000"/>
                 <replicated-cache name="default">
@@ -636,7 +671,7 @@
             <inet-address value="${jboss.bind.address.management:127.0.0.1}"/>
         </interface>
         <interface name="private">
-            <inet-address value="${jboss.bind.address.private:127.0.0.1}"/>
+          <nic name="ens4"/>
         </interface>
         <interface name="public">
             <inet-address value="${jboss.bind.address:127.0.0.1}"/>
@@ -658,5 +693,10 @@
         <outbound-socket-binding name="mail-smtp">
             <remote-destination host="localhost" port="25"/>
         </outbound-socket-binding>
+        <outbound-socket-binding name="remote-cache">
+            <remote-destination host="${remote.cache.host:x.x.x.x}" port="${remote.cache.port:11222}"/>
+        </outbound-socket-binding>
+
     </socket-binding-group>
 </server>
+

@@ -1,4 +1,6 @@
 standalone/log/
+standalone/data/
+standalone/configuration/standalone_xml_history/
 bin/
 docs/
 domain/

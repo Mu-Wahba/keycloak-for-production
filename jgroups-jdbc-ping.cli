@@ -1,0 +1,25 @@
+# remove the unused UDP stack
+/subsystem=jgroups/stack=udp:remove()
+/socket-binding-group=standard-sockets/socket-binding=jgroups-mping:remove()
+# remove the default TCP stack
+/subsystem=jgroups/stack=tcp:remove()
+
+#create our new TCP stack based on JGROUP_PING protocol
+/subsystem=jgroups/stack=tcp:add()
+/subsystem=jgroups/stack=tcp/transport=TCP:add(socket-binding="jgroups-tcp")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING: add(data-source="KeycloakDS", properties=[initialize_sql="CREATE TABLE IF NOT EXISTS JGROUPSPING (own_addr varchar(200) NOT NULL, cluster_name varchar(200) NOT NULL, updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, ping_data varbinary(5000) DEFAULT NULL, PRIMARY KEY (own_addr, cluster_name)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin",remove_old_coords_on_view_change="true",remove_all_data_on_view_change="true"])
+/subsystem=jgroups/stack=tcp/protocol=MERGE3:add()
+/subsystem=jgroups/stack=tcp/protocol=FD_SOCK:add(socket-binding="jgroups-tcp-fd")
+#/subsystem=jgroups/stack=tcp/protocol=FD:add()
+/subsystem=jgroups/stack=tcp/protocol=FD_ALL:add()
+/subsystem=jgroups/stack=tcp/protocol=VERIFY_SUSPECT:add()
+/subsystem=jgroups/stack=tcp/protocol=pbcast.NAKACK2:add()
+/subsystem=jgroups/stack=tcp/protocol=UNICAST3:add()
+/subsystem=jgroups/stack=tcp/protocol=pbcast.STABLE:add()
+/subsystem=jgroups/stack=tcp/protocol=pbcast.GMS:add()
+/subsystem=jgroups/stack=tcp/protocol=pbcast.GMS/property=max_join_attempts:add(value=5)
+/subsystem=jgroups/stack=tcp/protocol=MFC:add()
+/subsystem=jgroups/stack=tcp/protocol=FRAG3:add()
+
+#set the tcp stack as the one used for the channel
+/subsystem=jgroups/channel=ee:write-attribute(name=stack, value=tcp)

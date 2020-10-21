@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<module xmlns="urn:jboss:module:1.1" name="at.favre.lib.crypto.bcrypt">
+
+    <resources>
+        <resource-root path="bcrypt-0.9.0.jar"/>
+    </resources>
+
+    <dependencies>
+        <module name="at.favre.lib.bytes"/>
+    </dependencies>
+</module>
